@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Login - FitSphere{% endblock %}
+{% block content %}
+<div class="flex items-center justify-center min-h-screen">
+    <div class="glass p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-4">Login</h1>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Login</button>
+            <a href="{% url 'forgot_password' %}" class="block text-center text-blue-400 hover:underline">Forgot Password?</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

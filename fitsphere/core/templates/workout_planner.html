@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Workout Planner - FitSphere{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Plan Your Workout</h1>
+    <form method="post" class="glass p-6 rounded-lg shadow-lg">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <input type="text" name="name" placeholder="Routine Name" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+            <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+            <input type="number" name="duration" placeholder="Duration (minutes)" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="exercise-list">
+                <h2 class="text-xl font-semibold mb-2">Exercises</h2>
+                {% for exercise in exercises %}
+                    <div class="draggable p-2 mb-2 bg-gray-800 rounded" data-id="{{ exercise.id }}">{{ exercise.name }}</div>
+                    <label><input type="checkbox" name="exercises" value="{{ exercise.id }}" class="mr-2"> Add</label>
+                {% endfor %}
+            </div>
+            <div class="routine glass p-4 rounded-lg" id="routine-drop">
+                <h2 class="text-xl font-semibold mb-2">Your Routine</h2>
+            </div>
+        </div>
+        <button type="submit" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Routine</button>
+    </form>
+</div>
+<script>
+    const draggables = document.querySelectorAll('.draggable');
+    const dropZone = document.getElementById('routine-drop');
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', draggable.dataset.id));
+    });
+    dropZone.addEventListener('dragover', e => e.preventDefault());
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text');
+        const exercise = document.querySelector(`[data-id="${id}"]`);
+        dropZone.appendChild(exercise.cloneNode(true));
+    });
+</script>
+{% endblock %}

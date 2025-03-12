@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FitSphere{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Theme toggle logic
+        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.theme = 'dark';
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        [data-theme="dark"] { background: #1a1a1a; color: #e0e0e0; }
+        [data-theme="light"] { background: #f0f0f0; color: #333; }
+        .glass { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="min-h-screen font-sans">
+    <nav class="fixed top-0 w-full glass z-10 p-4 flex justify-between">
+        <a href="{% url 'landing' %}" class="text-lg font-bold">FitSphere</a>
+        <div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="mx-2">Dashboard</a>
+                <a href="{% url 'workout_planner' %}" class="mx-2">Planner</a>
+                <a href="{% url 'logout' %}" class="mx-2">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="mx-2">Login</a>
+                <a href="{% url 'register' %}" class="mx-2">Register</a>
+            {% endif %}
+            <button onclick="toggleTheme()" class="mx-2 p-1 rounded bg-gray-800 text-white dark:bg-gray-200 dark:text-black">Toggle Theme</button>
+        </div>
+    </nav>
+    <main class="pt-20">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
