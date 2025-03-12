@@ -9,4 +9,5 @@ urlpatterns = [
     path('reset-password/', views.reset_password, name='reset_password'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('workout-planner/', views.workout_planner, name='workout_planner'),
+    path('chatbot/', views.chatbot, name='chatbot'),
 ]

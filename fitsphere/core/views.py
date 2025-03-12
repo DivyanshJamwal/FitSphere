@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import RegisterForm, LoginForm
+import requests
 import random
 from django.contrib.auth.decorators import login_required
 from .models import Routine, Exercise
@@ -90,3 +91,29 @@ def reset_password(request):
             return redirect('login')
         return render(request, 'reset_password.html', {'error': 'Invalid OTP'})
     return render(request, 'reset_password.html')
+
+@login_required
+def chatbot(request):
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        # Mock Gemini API response (replace with real key later)
+        response = f"FitSphere Bot: I hear you say '{message}'. Try asking for a workout tip, motivation, or plan help!"
+        # Real Gemini API call (uncomment with key):
+        # api_key = "YOUR_GEMINI_API_KEY_HERE"
+        # try:
+        #     resp = requests.post(
+        #         "https://api.gemini.com/v1/chat",  # Placeholder URL; adjust to actual Gemini endpoint
+        #         json={"message": message, "model": "gemini-1.0"},
+        #         headers={"Authorization": f"Bearer {api_key}"}
+        #     )
+        #     response = resp.json().get('reply', 'Error: No response from Gemini')
+        # except requests.exceptions.RequestException as e:
+        #     response = f"Error: {str(e)}"
+        
+        # Store chat history in session
+        chat_history = request.session.get('chat_history', [])
+        chat_history.append({"user": message, "bot": response})
+        request.session['chat_history'] = chat_history[-5:]  # Keep last 5 messages
+        return render(request, 'core/chatbot.html', {'chat_history': chat_history})
+    chat_history = request.session.get('chat_history', [])
+    return render(request, 'core/chatbot.html', {'chat_history': chat_history})
