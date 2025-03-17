@@ -158,18 +158,30 @@ def bmi_tracker(request):
 @login_required
 @require_POST
 def chatbot_message(request):
-    message = request.POST.get('message')
-    api_key = "AIzaSyAtKmaTAuQJ8gSVyDK7MHCMJbyd4PFE_lk"  # Replace with your real key
-    try:
-        resp = requests.post(
-            "https://api.gemini.com/v1/chat",  # Adjust to actual Gemini endpoint
-            json={"message": message, "model": "gemini-1.0"},
-            headers={"Authorization": f"Bearer {api_key}"}
-        )
-        response = resp.json().get('reply', 'Error: No response from Gemini')
-    except requests.exceptions.RequestException as e:
-        response = f"Error: {str(e)}"
+    message = request.POST.get('message').lower()
+    api_key = ""  # Replace with your real key NOW
     
+    # Fitness/diet tips logic
+    if 'workout' in message or 'exercise' in message:
+        response = "Try a 20-min HIIT session: 10 burpees, 15 squats, 20 jumping jacks—repeat 3x for a killer burn!"
+    elif 'diet' in message or 'food' in message:
+        response = "Fuel up with 100g chicken breast (31g protein, 165 cal) and 200g broccoli (7g carbs, 70 cal)—lean and mean!"
+    elif 'motivation' in message or 'inspire' in message:
+        response = "You’re a titan carving your legacy—every rep, every bite bends the world to your will. Keep ruling!"
+    else:
+        # Real Gemini API call
+        try:
+            resp = requests.post(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                json={"contents": [{"parts": [{"text": message}]}]},
+                headers={"Content-Type": "application/json"},
+                params={"key": api_key}
+            )
+            resp.raise_for_status()
+            response = resp.json()['candidates'][0]['content']['parts'][0]['text']
+        except requests.exceptions.RequestException as e:
+            response = f"Error: {str(e)}"
+
     chat_history = request.session.get('chat_history', [])
     chat_history.append({"user": message, "bot": response})
     request.session['chat_history'] = chat_history[-5:]

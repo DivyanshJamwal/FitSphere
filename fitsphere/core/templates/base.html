@@ -69,6 +69,7 @@
     </style>
 </head>
 <body class="min-h-screen font-sans">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <nav class="fixed top-0 w-full glass z-10 p-4 flex justify-between items-center">
         <a href="{% url 'landing' %}" class="text-lg font-bold">FitSphere</a>
         <div class="flex items-center">
@@ -89,27 +90,61 @@
     <main class="pt-20">
         {% block content %}{% endblock %}
     </main>
-    {% if user.is_authenticated %}
-        <div class="fixed bottom-4 right-4 z-20">
-            <button onclick="toggleChatbot()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h4m9-7a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </button>
-            <div id="chatbot" class="hidden glass p-4 rounded-lg shadow-lg w-80 h-96 flex flex-col mt-2">
-                <h3 class="text-lg font-bold mb-2">FitSphere Bot</h3>
-                <div id="chat-body" class="flex-1 overflow-y-auto mb-2">
-                    {% for chat in request.session.chat_history %}
-                        <p class="text-sm"><strong>You:</strong> {{ chat.user }}</p>
-                        <p class="text-sm"><strong>Bot:</strong> {{ chat.bot }}</p>
-                    {% empty %}
-                        <p class="text-sm">Ask me anything!</p>
-                    {% endfor %}
-                </div>
-                <form onsubmit="sendMessage(event)" class="flex">
-                    <input id="chat-input" type="text" name="message" placeholder="Type here..." required class="flex-1 p-2 bg-transparent border-b border-gray-500 focus:outline-none">
-                    <button type="submit" class="ml-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Send</button>
-                </form>
+{% if user.is_authenticated %}
+    <div class="fixed bottom-4 right-4 z-20">
+        <button onclick="toggleChatbot()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h4m9-7a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </button>
+        <div id="chatbot" class="hidden glass p-4 rounded-lg shadow-lg w-80 h-96 flex flex-col mt-2">
+            <h3 class="text-lg font-bold mb-2">FitSphere Bot</h3>
+            <div id="chat-body" class="flex-1 overflow-y-auto mb-2">
+                {% for chat in request.session.chat_history %}
+                    <p class="text-sm"><strong>You:</strong> {{ chat.user }}</p>
+                    <p class="text-sm"><strong>Bot:</strong> {{ chat.bot }}</p>
+                {% empty %}
+                    <p class="text-sm">Ask me anything!</p>
+                {% endfor %}
             </div>
+            <form onsubmit="sendMessage(event)" class="flex">
+                <input id="chat-input" type="text" name="message" placeholder="Type here..." required class="flex-1 p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+                <button type="submit" class="ml-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Send</button>
+            </form>
         </div>
-    {% endif %}
+    </div>
+    <script>
+        function getCsrfToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            const chatBody = document.getElementById('chat-body');
+            chatBody.innerHTML += `<p class="text-sm"><strong>You:</strong> ${message}</p>`;
+            fetch("{% url 'chatbot_message' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: `message=${encodeURIComponent(message)}`
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                chatBody.innerHTML += `<p class="text-sm"><strong>Bot:</strong> ${data.bot}</p>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+            })
+            .catch(error => {
+                chatBody.innerHTML += `<p class="text-sm text-red-500">Error: ${error.message}</p>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+            });
+            input.value = '';
+        }
+    </script>
+{% endif %}
 </body>
 </html>
