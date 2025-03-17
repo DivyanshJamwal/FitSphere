@@ -134,6 +134,7 @@ AUTH_USER_MODEL = 'core.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For dev; swap to SMTP later
 DEFAULT_FROM_EMAIL = 'no-reply@fitsphere.com'
+LOGIN_URL = 'login'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

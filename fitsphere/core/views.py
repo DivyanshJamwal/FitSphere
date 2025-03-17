@@ -1,18 +1,29 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import RegisterForm, LoginForm
+from django.contrib import messages
 import requests
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 import random
+import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
 from django.contrib.auth.decorators import login_required
-from .models import Routine, Exercise
+from .models import Routine, Exercise, Meal, Food, FitnessTracker, BMIRecord
 
 @login_required
 def dashboard(request):
     routines = Routine.objects.filter(user=request.user)[:5]  # Last 5 routines
     streak = Routine.objects.filter(user=request.user).count()  # Simple streak proxy
     return render(request, 'dashboard.html', {'routines': routines, 'streak': streak})
+
+@login_required
+def logout(request):
+    auth_logout(request)
+    return redirect('login')
 
 def landing(request):
     return render(request, 'landing.html')
@@ -52,8 +63,12 @@ def login(request):
             if user is None:  # Try username if email fails
                 user = authenticate(request, username=login_field, password=password)
             if user is not None:
-                login(request, user)  # Fixed: Pass request and user
+                auth_login(request, user)  # Use auth_login to avoid conflict
                 return redirect('dashboard')
+            else:
+                messages.error(request, 'Invalid login credentials')
+        else:
+            messages.error(request, 'Invalid form submission')
     else:
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
@@ -92,28 +107,70 @@ def reset_password(request):
         return render(request, 'reset_password.html', {'error': 'Invalid OTP'})
     return render(request, 'reset_password.html')
 
+
 @login_required
 def chatbot(request):
-    if request.method == 'POST':
-        message = request.POST.get('message')
-        # Mock Gemini API response (replace with real key later)
-        response = f"FitSphere Bot: I hear you say '{message}'. Try asking for a workout tip, motivation, or plan help!"
-        # Real Gemini API call (uncomment with key):
-        # api_key = "YOUR_GEMINI_API_KEY_HERE"
-        # try:
-        #     resp = requests.post(
-        #         "https://api.gemini.com/v1/chat",  # Placeholder URL; adjust to actual Gemini endpoint
-        #         json={"message": message, "model": "gemini-1.0"},
-        #         headers={"Authorization": f"Bearer {api_key}"}
-        #     )
-        #     response = resp.json().get('reply', 'Error: No response from Gemini')
-        # except requests.exceptions.RequestException as e:
-        #     response = f"Error: {str(e)}"
-        
-        # Store chat history in session
-        chat_history = request.session.get('chat_history', [])
-        chat_history.append({"user": message, "bot": response})
-        request.session['chat_history'] = chat_history[-5:]  # Keep last 5 messages
-        return render(request, 'core/chatbot.html', {'chat_history': chat_history})
     chat_history = request.session.get('chat_history', [])
     return render(request, 'core/chatbot.html', {'chat_history': chat_history})
+
+
+@login_required
+def diet_planner(request):
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        food_ids = request.POST.getlist('foods')
+        quantities = request.POST.getlist('quantities')
+        for food_id, qty in zip(food_ids, quantities):
+            Meal.objects.create(user=request.user, date=date, food_id=food_id, quantity=float(qty))
+        return redirect('dashboard')
+    foods = Food.objects.all()
+    meals = Meal.objects.filter(user=request.user)
+    return render(request, 'core/diet_planner.html', {'foods': foods, 'meals': meals})
+
+@login_required
+def fitness_tracker(request):
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        steps = request.POST.get('steps')
+        distance = request.POST.get('distance')
+        time = request.POST.get('time')
+        calories_burned = request.POST.get('calories_burned')
+        FitnessTracker.objects.create(
+            user=request.user, date=date, steps=steps, distance=distance, time=time, calories_burned=calories_burned
+        )
+        # Google Fit Sync (requires OAuth setup)
+        # Placeholder: Real sync needs client_secrets.json and OAuth flow
+        return redirect('dashboard')
+    tracker = FitnessTracker.objects.filter(user=request.user)
+    return render(request, 'core/fitness_tracker.html', {'tracker': tracker})
+
+@login_required
+def bmi_tracker(request):
+    if request.method == 'POST':
+        date = request.POST.get('date')
+        height = request.POST.get('height')
+        weight = request.POST.get('weight')
+        BMIRecord.objects.create(user=request.user, date=date, height=height, weight=weight)
+        return redirect('dashboard')
+    records = BMIRecord.objects.filter(user=request.user)
+    return render(request, 'core/bmi_tracker.html', {'records': records})
+
+@login_required
+@require_POST
+def chatbot_message(request):
+    message = request.POST.get('message')
+    api_key = "AIzaSyAtKmaTAuQJ8gSVyDK7MHCMJbyd4PFE_lk"  # Replace with your real key
+    try:
+        resp = requests.post(
+            "https://api.gemini.com/v1/chat",  # Adjust to actual Gemini endpoint
+            json={"message": message, "model": "gemini-1.0"},
+            headers={"Authorization": f"Bearer {api_key}"}
+        )
+        response = resp.json().get('reply', 'Error: No response from Gemini')
+    except requests.exceptions.RequestException as e:
+        response = f"Error: {str(e)}"
+    
+    chat_history = request.session.get('chat_history', [])
+    chat_history.append({"user": message, "bot": response})
+    request.session['chat_history'] = chat_history[-5:]
+    return JsonResponse({'user': message, 'bot': response})

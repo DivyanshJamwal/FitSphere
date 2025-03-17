@@ -26,6 +26,31 @@
             const chat = document.getElementById('chatbot');
             chat.classList.toggle('hidden');
         }
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            const chatBody = document.getElementById('chat-body');
+            chatBody.innerHTML += `<p class="text-sm"><strong>You:</strong> ${message}</p>`;
+            fetch("{% url 'chatbot_message' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatBody.innerHTML += `<p class="text-sm"><strong>Bot:</strong> ${data.bot}</p>`;
+                chatBody.scrollTop = chatBody.scrollHeight;
+            })
+            .catch(error => {
+                chatBody.innerHTML += `<p class="text-sm text-red-500">Error: ${error}</p>`;
+            });
+            input.value = '';
+        }
     </script>
     <style>
         :root {
@@ -35,7 +60,6 @@
         [data-theme="dark"] { background: #1a1a1a; color: #e0e0e0; }
         [data-theme="light"] { background: #f0f0f0; color: #333; }
         .glass { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        /* Switch Styling */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
@@ -72,7 +96,7 @@
             </button>
             <div id="chatbot" class="hidden glass p-4 rounded-lg shadow-lg w-80 h-96 flex flex-col mt-2">
                 <h3 class="text-lg font-bold mb-2">FitSphere Bot</h3>
-                <div class="flex-1 overflow-y-auto mb-2">
+                <div id="chat-body" class="flex-1 overflow-y-auto mb-2">
                     {% for chat in request.session.chat_history %}
                         <p class="text-sm"><strong>You:</strong> {{ chat.user }}</p>
                         <p class="text-sm"><strong>Bot:</strong> {{ chat.bot }}</p>
@@ -80,9 +104,8 @@
                         <p class="text-sm">Ask me anything!</p>
                     {% endfor %}
                 </div>
-                <form method="post" action="{% url 'chatbot' %}" class="flex">
-                    {% csrf_token %}
-                    <input type="text" name="message" placeholder="Type here..." required class="flex-1 p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+                <form onsubmit="sendMessage(event)" class="flex">
+                    <input id="chat-input" type="text" name="message" placeholder="Type here..." required class="flex-1 p-2 bg-transparent border-b border-gray-500 focus:outline-none">
                     <button type="submit" class="ml-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Send</button>
                 </form>
             </div>

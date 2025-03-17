@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Diet Planner - FitSphere{% endblock %}
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Diet Planner</h1>
+    <form method="post" class="glass p-6 rounded-lg shadow-lg">
+        {% csrf_token %}
+        <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none mb-4">
+        <div class="space-y-4">
+            {% for food in foods %}
+                <div class="flex items-center">
+                    <input type="checkbox" name="foods" value="{{ food.food_id }}" class="mr-2">
+                    <label>{{ food.name }} ({{ food.calories }} cal/100g)</label>
+                    <input type="number" name="quantities" placeholder="Qty (g)" class="ml-4 p-2 bg-transparent border-b border-gray-500 focus:outline-none w-24">
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Meals</button>
+    </form>
+    <div class="mt-6 glass p-4 rounded-lg">
+        <h2 class="text-xl font-semibold">Your Meals</h2>
+        {% for meal in meals %}
+            <p>{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
+        {% empty %}
+            <p>No meals logged yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
