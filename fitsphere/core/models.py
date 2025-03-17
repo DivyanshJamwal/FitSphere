@@ -57,12 +57,24 @@ class Exercise(models.Model):
 class Routine(models.Model):
     name = models.CharField(max_length=100)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    exercises = models.ManyToManyField(Exercise)
+    # Replace 'exercises' with new field using through
+    exercise_entries = models.ManyToManyField(Exercise, through='RoutineExercise')
     date = models.DateField()
     duration = models.PositiveIntegerField(help_text="Duration in minutes")
 
     def __str__(self):
         return f"{self.name} - {self.user.username}"
+
+class RoutineExercise(models.Model):
+    routine = models.ForeignKey(Routine, on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
+    sets = models.PositiveIntegerField(default=1)
+    reps = models.PositiveIntegerField(default=1)
+    is_dropset = models.BooleanField(default=False)
+    is_superset = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.exercise.name} in {self.routine.name}"
 
 class Food(models.Model):
     food_id = models.AutoField(primary_key=True)
@@ -71,6 +83,8 @@ class Food(models.Model):
     protein = models.FloatField(help_text="Protein per 100g")
     carbs = models.FloatField(help_text="Carbs per 100g")
     fat = models.FloatField(help_text="Fat per 100g")
+    is_veg = models.BooleanField(default=False)
+    restrictions = models.CharField(max_length=100, blank=True, help_text="e.g., gluten-free, nut-free")
 
     def __str__(self):
         return self.name

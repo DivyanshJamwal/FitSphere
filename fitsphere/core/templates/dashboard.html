@@ -1,66 +1,79 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - FitSphere{% endblock %}
 {% block content %}
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Welcome, {{ user.first_name }}</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Routine Streak: {{ routine_streak }} days</h2>
-            <h2 class="text-xl font-semibold">Meal Streak: {{ meal_streak }} days</h2>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<div class="container mx-auto p-6 min-h-screen">
+    <h1 class="text-4xl font-bold mb-8 text-center animate__animated animate__fadeIn">Welcome, {{ user.first_name }}</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">Streaks</h2>
+            <p>Routine: <span class="text-blue-400">{{ routine_streak }} days</span></p>
+            <p>Meal: <span class="text-blue-400">{{ meal_streak }} days</span></p>
         </div>
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Recent Routines</h2>
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">Recent Routines</h2>
             {% for routine in routines %}
-                <p>{{ routine.name }} - {{ routine.date }}</p>
+                <p class="text-sm">{{ routine.name }} - {{ routine.date }}</p>
             {% empty %}
-                <p>No routines yet.</p>
+                <p class="text-sm">No routines yet.</p>
             {% endfor %}
-            <a href="{% url 'workout_planner' %}" class="mt-2 inline-block text-blue-400 hover:underline">Plan a Workout</a>
+            <a href="{% url 'workout_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Workout</a>
         </div>
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Recent Meals</h2>
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">Recent Meals</h2>
             {% for meal in meals %}
-                <p>{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
+                <p class="text-sm">{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
             {% empty %}
-                <p>No meals yet.</p>
+                <p class="text-sm">No meals yet.</p>
             {% endfor %}
-            <a href="{% url 'diet_planner' %}" class="mt-2 inline-block text-blue-400 hover:underline">Plan a Diet</a>
+            <a href="{% url 'diet_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Diet</a>
         </div>
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Fitness Activity</h2>
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">Fitness Activity</h2>
             {% for entry in fitness %}
-                <p>{{ entry.date }}: {{ entry.steps }} steps</p>
+                <p class="text-sm">{{ entry.date }}: {{ entry.steps }} steps</p>
             {% empty %}
-                <p>No activity yet.</p>
+                <p class="text-sm">No activity yet.</p>
             {% endfor %}
-            <a href="{% url 'fitness_tracker' %}" class="mt-2 inline-block text-blue-400 hover:underline">Track Fitness</a>
+            <a href="{% url 'fitness_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track Fitness</a>
         </div>
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">BMI Records</h2>
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">BMI Records</h2>
             {% for record in bmi %}
-                <p>{{ record.date }}: BMI {{ record.bmi|floatformat:1 }}</p>
+                <p class="text-sm">{{ record.date }}: BMI {{ record.bmi|floatformat:1 }}</p>
             {% empty %}
-                <p>No BMI records yet.</p>
+                <p class="text-sm">No BMI records yet.</p>
             {% endfor %}
-            <a href="{% url 'bmi_tracker' %}" class="mt-2 inline-block text-blue-400 hover:underline">Track BMI</a>
+            <a href="{% url 'bmi_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track BMI</a>
         </div>
-        <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Achievements</h2>
+        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <h2 class="text-2xl font-semibold mb-2">Achievements</h2>
             {% for achievement in achievements %}
-                <p>{{ achievement.name }} - {{ achievement.date_earned }}</p>
+                <p class="text-sm">{{ achievement.name }} - {{ achievement.date_earned }}</p>
             {% empty %}
-                <p>No achievements yet.</p>
+                <p class="text-sm">No achievements yet.</p>
             {% endfor %}
         </div>
     </div>
-    <div class="mt-6 glass p-4 rounded-lg shadow-lg text-center">
-        <h2 class="text-xl font-semibold">Go Premium</h2>
-        <p class="mb-2">Unlock exclusive features with a FitSphere subscription!</p>
-        <a href="#" class="inline-block py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded">Subscribe Now</a>
+    <div class="mt-8 glass p-6 rounded-xl shadow-lg text-center animate__animated animate__pulse animate__infinite">
+        <h2 class="text-2xl font-semibold mb-2">Go Premium</h2>
+        <p class="mb-4">Unlock exclusive features with FitSphere Pro!</p>
+        <a href="#" class="inline-block py-2 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all">Subscribe Now</a>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script>
-    gsap.from(".glass", { opacity: 0, y: 50, duration: 1, stagger: 0.3 });
+    document.addEventListener('DOMContentLoaded', () => {
+        gsap.to("#dashboard-grid .glass", { 
+            opacity: 1, 
+            y: 0, 
+            duration: 1, 
+            stagger: 0.3, 
+            ease: "power2.out" 
+        });
+    });
 </script>
+<style>
+    .glass { opacity: 0; transform: translateY(50px); } /* Initial state for animation */
+</style>
 {% endblock %}

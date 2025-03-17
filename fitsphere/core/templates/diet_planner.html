@@ -3,21 +3,29 @@
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Diet Planner</h1>
-    <form method="post" class="glass p-6 rounded-lg shadow-lg">
+    <form method="get" class="glass p-4 rounded-xl mb-6">
+        <div class="flex flex-wrap gap-4">
+            <input type="text" name="search" placeholder="Search foods..." class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+            <label><input type="checkbox" name="veg" value="true" {% if request.GET.veg == 'true' %}checked{% endif %}> Veg Only</label>
+            <input type="text" name="restriction" placeholder="e.g., gluten-free" class="p-2 bg-transparent border-b border-gray-500 focus:outline-none" value="{{ request.GET.restriction }}">
+            <button type="submit" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded">Filter</button>
+        </div>
+    </form>
+    <form method="post" class="glass p-6 rounded-xl shadow-lg">
         {% csrf_token %}
-        <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none mb-4">
-        <div class="space-y-4">
+        <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none mb-6 w-full">
+        <div class="space-y-4 max-h-96 overflow-y-auto">
             {% for food in foods %}
                 <div class="flex items-center">
                     <input type="checkbox" name="foods" value="{{ food.food_id }}" class="mr-2">
-                    <label>{{ food.name }} ({{ food.calories }} cal/100g)</label>
-                    <input type="number" name="quantities" placeholder="Qty (g)" class="ml-4 p-2 bg-transparent border-b border-gray-500 focus:outline-none w-24">
+                    <label>{{ food.name }} ({{ food.calories }} cal/100g, {% if food.is_veg %}Veg{% else %}Non-Veg{% endif %}, {{ food.restrictions|default:"No restrictions" }})</label>
+                    <input type="number" name="quantities" placeholder="Qty (g)" class="ml-4 p-1 bg-transparent border-b border-gray-500 focus:outline-none w-24">
                 </div>
             {% endfor %}
         </div>
-        <button type="submit" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Meals</button>
+        <button type="submit" class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Meals</button>
     </form>
-    <div class="mt-6 glass p-4 rounded-lg">
+    <div class="mt-6 glass p-4 rounded-xl">
         <h2 class="text-xl font-semibold">Your Meals</h2>
         {% for meal in meals %}
             <p>{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>

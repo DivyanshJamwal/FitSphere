@@ -3,9 +3,9 @@
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Plan Your Workout</h1>
-    <form method="post" class="glass p-6 rounded-lg shadow-lg">
+    <form method="post" class="glass p-6 rounded-xl shadow-lg">
         {% csrf_token %}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <input type="text" name="name" placeholder="Routine Name" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
             <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
             <input type="number" name="duration" placeholder="Duration (minutes)" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
@@ -15,14 +15,20 @@
                 <h2 class="text-xl font-semibold mb-2">Exercises</h2>
                 {% for exercise in exercises %}
                     <div class="draggable p-2 mb-2 bg-gray-800 rounded" data-id="{{ exercise.id }}">{{ exercise.name }}</div>
-                    <label><input type="checkbox" name="exercises" value="{{ exercise.id }}" class="mr-2"> Add</label>
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" name="exercises" value="{{ exercise.id }}" class="mr-2">
+                        <input type="number" name="sets" placeholder="Sets" min="1" class="w-16 p-1 bg-transparent border-b border-gray-500 mr-2">
+                        <input type="number" name="reps" placeholder="Reps" min="1" class="w-16 p-1 bg-transparent border-b border-gray-500 mr-2">
+                        <label class="mr-2"><input type="checkbox" name="dropsets" value="1"> Drop</label>
+                        <label><input type="checkbox" name="supersets" value="1"> Super</label>
+                    </div>
                 {% endfor %}
             </div>
             <div class="routine glass p-4 rounded-lg" id="routine-drop">
                 <h2 class="text-xl font-semibold mb-2">Your Routine</h2>
             </div>
         </div>
-        <button type="submit" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Routine</button>
+        <button type="submit" class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Save Routine</button>
     </form>
 </div>
 <script>

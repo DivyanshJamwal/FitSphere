@@ -3,21 +3,20 @@
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Fitness Tracker</h1>
-    <form method="post" class="glass p-6 rounded-lg shadow-lg">
+    <form method="post" class="glass p-6 rounded-xl shadow-lg">
         {% csrf_token %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input type="date" name="date" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
             <input type="number" name="steps" placeholder="Steps" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
-            <input type="number" name="distance" placeholder="Distance (km)" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
+            <input type="number" name="distance" placeholder="Distance (km)" step="0.1" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
             <input type="number" name="time" placeholder="Time (min)" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
-            <input type="number" name="calories_burned" placeholder="Calories Burned" required class="p-2 bg-transparent border-b border-gray-500 focus:outline-none">
         </div>
-        <button type="submit" class="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Log Activity</button>
+        <button type="submit" class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Log Activity</button>
     </form>
-    <div class="mt-6 glass p-4 rounded-lg">
+    <div class="mt-6 glass p-4 rounded-xl">
         <h2 class="text-xl font-semibold">Your Activity</h2>
         {% for entry in tracker %}
-            <p>{{ entry.date }}: {{ entry.steps }} steps, {{ entry.distance }} km, {{ entry.time }} min, {{ entry.calories_burned }} cal</p>
+            <p>{{ entry.date }}: {{ entry.steps }} steps, {{ entry.distance }} km, {{ entry.time }} min, {{ entry.calories_burned|floatformat:0 }} cal</p>
         {% empty %}
             <p>No activity logged yet.</p>
         {% endfor %}
