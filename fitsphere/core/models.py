@@ -109,3 +109,21 @@ class BMIRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - BMI {self.bmi} on {self.date}"
+
+class Streak(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    type = models.CharField(max_length=20, choices=[('routine', 'Routine'), ('meal', 'Meal')], default='routine')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.type} Streak"
+
+class Achievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    date_earned = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"

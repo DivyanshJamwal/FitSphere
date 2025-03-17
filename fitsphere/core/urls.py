@@ -14,5 +14,6 @@ urlpatterns = [
     path('bmi-tracker/', views.bmi_tracker, name='bmi_tracker'),
     path('chatbot/', views.chatbot, name='chatbot'),
     path('chatbot/message/', views.chatbot_message, name='chatbot_message'),
-    path('logout/', views.logout, name='logout'),
+    path('chatbot/clear/', views.chatbot_clear, name='chatbot_clear'),
+    path('logout/', views.logout_view, name='logout'),
 ]

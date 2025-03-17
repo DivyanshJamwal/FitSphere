@@ -12,18 +12,68 @@ import random
 import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from django.contrib.auth.decorators import login_required
-from .models import Routine, Exercise, Meal, Food, FitnessTracker, BMIRecord
+from .models import Routine, Exercise, Meal, Food, FitnessTracker, BMIRecord, Streak, Achievement
+from datetime import date, timedelta
+from django.db.models import Q
 
 @login_required
 def dashboard(request):
-    routines = Routine.objects.filter(user=request.user)[:5]  # Last 5 routines
-    streak = Routine.objects.filter(user=request.user).count()  # Simple streak proxy
-    return render(request, 'dashboard.html', {'routines': routines, 'streak': streak})
+    # Streaks Logic
+    today = date.today()
+    routines = Routine.objects.filter(user=request.user).order_by('-date')
+    meals = Meal.objects.filter(user=request.user).order_by('-date')
+    
+    routine_streak = 0
+    if routines.exists():
+        last_date = routines[0].date
+        if last_date == today or last_date == today - timedelta(days=1):
+            routine_streak = 1
+            for i in range(1, len(routines)):
+                if routines[i].date == last_date - timedelta(days=1):
+                    routine_streak += 1
+                    last_date = routines[i].date
+                else:
+                    break
+    
+    meal_streak = 0
+    if meals.exists():
+        last_date = meals[0].date
+        if last_date == today or last_date == today - timedelta(days=1):
+            meal_streak = 1
+            for i in range(1, len(meals)):
+                if meals[i].date == last_date - timedelta(days=1):
+                    meal_streak += 1
+                    last_date = meals[i].date
+                else:
+                    break
+
+    # Achievements Logic
+    achievements = Achievement.objects.filter(user=request.user)
+    if not achievements.filter(name="First Meal").exists() and meals.exists():
+        Achievement.objects.create(user=request.user, name="First Meal", description="Logged your first meal!")
+    if not achievements.filter(name="First Routine").exists() and routines.exists():
+        Achievement.objects.create(user=request.user, name="First Routine", description="Planned your first workout!")
+    if not achievements.filter(name="10k Steps").exists() and FitnessTracker.objects.filter(user=request.user, steps__gte=10000).exists():
+        Achievement.objects.create(user=request.user, name="10k Steps", description="Hit 10,000 steps in a day!")
+    if not achievements.filter(name="Week Streak").exists() and (routine_streak >= 7 or meal_streak >= 7):
+        Achievement.objects.create(user=request.user, name="Week Streak", description="Maintained a 7-day streak!")
+    if not achievements.filter(name="First BMI").exists() and BMIRecord.objects.filter(user=request.user).exists():
+        Achievement.objects.create(user=request.user, name="First BMI", description="Tracked your first BMI!")
+
+    routines = routines[:5]
+    meals = meals[:5]
+    fitness = FitnessTracker.objects.filter(user=request.user)[:5]
+    bmi = BMIRecord.objects.filter(user=request.user)[:5]
+    achievements = achievements[:5]
+    return render(request, 'dashboard.html', {
+        'routines': routines, 'routine_streak': routine_streak, 'meal_streak': meal_streak,
+        'meals': meals, 'fitness': fitness, 'bmi': bmi, 'achievements': achievements
+    })
 
 @login_required
-def logout(request):
+def logout_view(request):
     auth_logout(request)
-    return redirect('login')
+    return redirect('landing')
 
 def landing(request):
     return render(request, 'landing.html')
@@ -125,7 +175,7 @@ def diet_planner(request):
         return redirect('dashboard')
     foods = Food.objects.all()
     meals = Meal.objects.filter(user=request.user)
-    return render(request, 'core/diet_planner.html', {'foods': foods, 'meals': meals})
+    return render(request, 'diet_planner.html', {'foods': foods, 'meals': meals})
 
 @login_required
 def fitness_tracker(request):
@@ -142,7 +192,7 @@ def fitness_tracker(request):
         # Placeholder: Real sync needs client_secrets.json and OAuth flow
         return redirect('dashboard')
     tracker = FitnessTracker.objects.filter(user=request.user)
-    return render(request, 'core/fitness_tracker.html', {'tracker': tracker})
+    return render(request, 'fitness_tracker.html', {'tracker': tracker})
 
 @login_required
 def bmi_tracker(request):
@@ -153,7 +203,14 @@ def bmi_tracker(request):
         BMIRecord.objects.create(user=request.user, date=date, height=height, weight=weight)
         return redirect('dashboard')
     records = BMIRecord.objects.filter(user=request.user)
-    return render(request, 'core/bmi_tracker.html', {'records': records})
+    return render(request, 'bmi_tracker.html', {'records': records})
+
+@login_required
+@require_POST
+def chatbot_clear(request):
+    if 'chat_history' in request.session:
+        del request.session['chat_history']
+    return JsonResponse({'status': 'cleared'})
 
 @login_required
 @require_POST
@@ -186,3 +243,4 @@ def chatbot_message(request):
     chat_history.append({"user": message, "bot": response})
     request.session['chat_history'] = chat_history[-5:]
     return JsonResponse({'user': message, 'bot': response})
+

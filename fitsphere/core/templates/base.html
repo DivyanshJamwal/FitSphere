@@ -76,6 +76,9 @@
             {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}" class="mx-2">Dashboard</a>
                 <a href="{% url 'workout_planner' %}" class="mx-2">Planner</a>
+                <a href="{% url 'diet_planner' %}" class="mx-2">Diet</a>
+                <a href="{% url 'fitness_tracker' %}" class="mx-2">Tracker</a>
+                <a href="#" class="mx-2 text-yellow-400">Merch</a>
                 <a href="{% url 'logout' %}" class="mx-2">Logout</a>
             {% else %}
                 <a href="{% url 'login' %}" class="mx-2">Login</a>
@@ -90,7 +93,7 @@
     <main class="pt-20">
         {% block content %}{% endblock %}
     </main>
-{% if user.is_authenticated %}
+    {% if user.is_authenticated %}
     <div class="fixed bottom-4 right-4 z-20">
         <button onclick="toggleChatbot()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h4m9-7a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -114,6 +117,21 @@
     <script>
         function getCsrfToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+        function toggleChatbot() {
+            const chat = document.getElementById('chatbot');
+            if (chat.classList.contains('hidden')) {
+                chat.classList.remove('hidden');
+            } else {
+                chat.classList.add('hidden');
+                // Clear chat history on close
+                fetch("{% url 'chatbot_clear' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrfToken() }
+                }).then(() => {
+                    document.getElementById('chat-body').innerHTML = '<p class="text-sm">Ask me anything!</p>';
+                });
+            }
         }
         function sendMessage(event) {
             event.preventDefault();

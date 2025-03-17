@@ -3,9 +3,10 @@
 {% block content %}
 <div class="container mx-auto p-6">
     <h1 class="text-3xl font-bold mb-6">Welcome, {{ user.first_name }}</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="glass p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold">Streak: {{ streak }} days</h2>
+            <h2 class="text-xl font-semibold">Routine Streak: {{ routine_streak }} days</h2>
+            <h2 class="text-xl font-semibold">Meal Streak: {{ meal_streak }} days</h2>
         </div>
         <div class="glass p-4 rounded-lg shadow-lg">
             <h2 class="text-xl font-semibold">Recent Routines</h2>
@@ -16,6 +17,46 @@
             {% endfor %}
             <a href="{% url 'workout_planner' %}" class="mt-2 inline-block text-blue-400 hover:underline">Plan a Workout</a>
         </div>
+        <div class="glass p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold">Recent Meals</h2>
+            {% for meal in meals %}
+                <p>{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
+            {% empty %}
+                <p>No meals yet.</p>
+            {% endfor %}
+            <a href="{% url 'diet_planner' %}" class="mt-2 inline-block text-blue-400 hover:underline">Plan a Diet</a>
+        </div>
+        <div class="glass p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold">Fitness Activity</h2>
+            {% for entry in fitness %}
+                <p>{{ entry.date }}: {{ entry.steps }} steps</p>
+            {% empty %}
+                <p>No activity yet.</p>
+            {% endfor %}
+            <a href="{% url 'fitness_tracker' %}" class="mt-2 inline-block text-blue-400 hover:underline">Track Fitness</a>
+        </div>
+        <div class="glass p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold">BMI Records</h2>
+            {% for record in bmi %}
+                <p>{{ record.date }}: BMI {{ record.bmi|floatformat:1 }}</p>
+            {% empty %}
+                <p>No BMI records yet.</p>
+            {% endfor %}
+            <a href="{% url 'bmi_tracker' %}" class="mt-2 inline-block text-blue-400 hover:underline">Track BMI</a>
+        </div>
+        <div class="glass p-4 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold">Achievements</h2>
+            {% for achievement in achievements %}
+                <p>{{ achievement.name }} - {{ achievement.date_earned }}</p>
+            {% empty %}
+                <p>No achievements yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="mt-6 glass p-4 rounded-lg shadow-lg text-center">
+        <h2 class="text-xl font-semibold">Go Premium</h2>
+        <p class="mb-2">Unlock exclusive features with a FitSphere subscription!</p>
+        <a href="#" class="inline-block py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded">Subscribe Now</a>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
