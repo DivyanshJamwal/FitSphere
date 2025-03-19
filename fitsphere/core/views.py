@@ -49,8 +49,8 @@ def dashboard(request):
     meals_today = Meal.objects.filter(user=request.user, date=today)
     calories_today = sum(meal.food.calories * (meal.quantity / 100) for meal in meals_today)
 
-    step_goal_percent = min((steps_today / request.user.step_goal) * 100, 100)
-    workout_goal_percent = min((workouts_week / request.user.workout_goal) * 100, 100)
+    step_goal_percent = int(min((steps_today / request.user.step_goal) * 100, 100))
+    workout_goal_percent = int(min((workouts_week / request.user.workout_goal) * 100, 100))
     nutrition_goal_percent = min((calories_today / request.user.calorie_goal) * 100, 100)
 
     # BMI Data
