@@ -1,79 +1,309 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - FitSphere{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-<div class="container mx-auto p-6 min-h-screen">
-    <h1 class="text-4xl font-bold mb-8 text-center animate__animated animate__fadeIn">Welcome, {{ user.first_name }}</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">Streaks</h2>
-            <p>Routine: <span class="text-blue-400">{{ routine_streak }} days</span></p>
-            <p>Meal: <span class="text-blue-400">{{ meal_streak }} days</span></p>
+<div class="container mx-auto px-4 py-8 h-full flex flex-col gap-6">
+    <!-- Welcome Header -->
+    <h1 class="text-4xl font-bold text-center text-white animate__animated animate__fadeIn">
+        Welcome, {{ user.first_name }}
+    </h1>
+
+    <!-- Streaks & BMI Chart Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center text-white">
+                <svg class="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                Health Overview
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-300">Routine Streak: <span class="text-blue-400">{{ routine_streak }} days</span></p>
+                    <p class="text-sm text-gray-300">Meal Streak: <span class="text-blue-400">{{ meal_streak }} days</span></p>
+                </div>
+                <canvas id="bmiChart" class="w-full h-32"></canvas>
+            </div>
         </div>
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">Recent Routines</h2>
-            {% for routine in routines %}
-                <p class="text-sm">{{ routine.name }} - {{ routine.date }}</p>
-            {% empty %}
-                <p class="text-sm">No routines yet.</p>
-            {% endfor %}
-            <a href="{% url 'workout_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Workout</a>
-        </div>
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">Recent Meals</h2>
-            {% for meal in meals %}
-                <p class="text-sm">{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
-            {% empty %}
-                <p class="text-sm">No meals yet.</p>
-            {% endfor %}
-            <a href="{% url 'diet_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Diet</a>
-        </div>
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">Fitness Activity</h2>
-            {% for entry in fitness %}
-                <p class="text-sm">{{ entry.date }}: {{ entry.steps }} steps</p>
-            {% empty %}
-                <p class="text-sm">No activity yet.</p>
-            {% endfor %}
-            <a href="{% url 'fitness_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track Fitness</a>
-        </div>
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">BMI Records</h2>
-            {% for record in bmi %}
-                <p class="text-sm">{{ record.date }}: BMI {{ record.bmi|floatformat:1 }}</p>
-            {% empty %}
-                <p class="text-sm">No BMI records yet.</p>
-            {% endfor %}
-            <a href="{% url 'bmi_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track BMI</a>
-        </div>
-        <div class="glass p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <h2 class="text-2xl font-semibold mb-2">Achievements</h2>
-            {% for achievement in achievements %}
-                <p class="text-sm">{{ achievement.name }} - {{ achievement.date_earned }}</p>
-            {% empty %}
-                <p class="text-sm">No achievements yet.</p>
-            {% endfor %}
+
+        <!-- Goal Progress -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center text-white">
+                <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Goal Progress
+            </h2>
+            <div class="grid grid-cols-3 gap-4 text-center text-white">
+                <div class="goal-circle" data-percent="{{ step_goal_percent }}">
+                    <svg class="w-8 h-8 mx-auto text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <p class="text-sm">Steps</p>
+                </div>
+                <div class="goal-circle" data-percent="{{ workout_goal_percent }}">
+                    <svg class="w-8 h-8 mx-auto text-purple-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <p class="text-sm">Workouts</p>
+                </div>
+                <div class="goal-circle" data-percent="{{ nutrition_goal_percent }}">
+                    <svg class="w-8 h-8 mx-auto text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"/>
+                    </svg>
+                    <p class="text-sm">Nutrition</p>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="mt-8 glass p-6 rounded-xl shadow-lg text-center animate__animated animate__pulse animate__infinite">
-        <h2 class="text-2xl font-semibold mb-2">Go Premium</h2>
-        <p class="mb-4">Unlock exclusive features with FitSphere Pro!</p>
-        <a href="#" class="inline-block py-2 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all">Subscribe Now</a>
+
+    <!-- Activity Sections -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="dashboard-grid">
+        <!-- Routines -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
+                    <svg class="w-6 h-6 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Recent Routines
+                </h2>
+                <button class="md:hidden toggle-collapse" data-target="#routines-content">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="routines-content" class="content-collapsible">
+                {% for routine in routines %}
+                    <p class="text-sm text-gray-300">{{ routine.name }} - {{ routine.date }}</p>
+                {% empty %}
+                    <p class="text-sm text-gray-400">No routines yet.</p>
+                {% endfor %}
+                <a href="{% url 'workout_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Workout</a>
+            </div>
+        </div>
+
+        <!-- Meals -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
+                    <svg class="w-6 h-6 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"/>
+                    </svg>
+                    Recent Meals
+                </h2>
+                <button class="md:hidden toggle-collapse" data-target="#meals-content">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="meals-content" class="content-collapsible">
+                {% for meal in meals %}
+                    <p class="text-sm text-gray-300">{{ meal.date }}: {{ meal.food.name }} - {{ meal.quantity }}g</p>
+                {% empty %}
+                    <p class="text-sm text-gray-400">No meals yet.</p>
+                {% endfor %}
+                <a href="{% url 'diet_planner' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Plan a Diet</a>
+            </div>
+        </div>
+
+        <!-- Fitness Activity -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
+                    <svg class="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Fitness Activity
+                </h2>
+                <button class="md:hidden toggle-collapse" data-target="#fitness-content">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="fitness-content" class="content-collapsible">
+                {% for entry in fitness %}
+                    <p class="text-sm text-gray-300">{{ entry.date }}: {{ entry.steps }} steps</p>
+                {% empty %}
+                    <p class="text-sm text-gray-400">No activity yet.</p>
+                {% endfor %}
+                <a href="{% url 'fitness_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track Fitness</a>
+            </div>
+        </div>
+
+        <!-- BMI Records -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
+                    <svg class="w-6 h-6 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap Wrote: "round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    BMI Records
+                </h2>
+                <button class="md:hidden toggle-collapse" data-target="#bmi-content">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="bmi-content" class="content-collapsible">
+                {% for record in bmi %}
+                    <p class="text-sm text-gray-300">{{ record.date }}: BMI {{ record.bmi|floatformat:1 }}</p>
+                {% empty %}
+                    <p class="text-sm text-gray-400">No BMI records yet.</p>
+                {% endfor %}
+                <a href="{% url 'bmi_tracker' %}" class="mt-2 inline-block text-blue-400 hover:text-blue-500">Track BMI</a>
+            </div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="glass p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-semibold mb-2 flex items-center text-white">
+                    <svg class="w-6 h-6 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Achievements
+                </h2>
+                <button class="md:hidden toggle-collapse" data-target="#achievements-content">
+                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="achievements-content" class="content-collapsible">
+                {% for achievement in achievements %}
+                    <div class="flex items-center mb-2 p-2 bg-gray-800 rounded-lg">
+                        <span class="w-6 h-6 mr-2 {{ achievement.tier }}-tier">{{ achievement.icon|safe }}</span>
+                        <div>
+                            <p class="text-sm font-medium text-white">{{ achievement.name }}</p>
+                            <p class="text-xs text-gray-400">{{ achievement.description }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-gray-400">No achievements yet.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<!-- JavaScript for Charts and Interactivity -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        gsap.to("#dashboard-grid .glass", { 
-            opacity: 1, 
-            y: 0, 
-            duration: 1, 
-            stagger: 0.3, 
-            ease: "power2.out" 
+    // BMI Chart
+    const bmiChartEl = document.getElementById('bmiChart');
+    if (bmiChartEl) {
+        try {
+            const bmiCtx = bmiChartEl.getContext('2d');
+            const bmiDates = JSON.parse('{{ bmi_dates|escapejs }}');
+            const bmiValues = JSON.parse('{{ bmi_values|escapejs }}');
+            new Chart(bmiCtx, {
+                type: 'line',
+                data: {
+                    labels: bmiDates,
+                    datasets: [{
+                        label: 'BMI Trend',
+                        data: bmiValues,
+                        borderColor: '#3b82f6',
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, title: { display: true, text: 'Date', color: '#d1d5db' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, title: { display: true, text: 'BMI', color: '#d1d5db' } }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('BMI Chart Error:', error);
+            bmiChartEl.parentElement.innerHTML = '<p class="text-red-400">Could not load BMI chart</p>';
+        }
+    }
+
+    // Goal Progress Circles
+    document.querySelectorAll('.goal-circle').forEach(el => {
+        const percent = parseFloat(el.dataset.percent) || 0;
+        const canvas = document.createElement('canvas');
+        canvas.width = 80;
+        canvas.height = 80;
+        el.prepend(canvas);
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [percent, 100 - percent],
+                    backgroundColor: ['#3b82f6', '#2d2d2d'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                rotation: -90,
+                circumference: 180,
+                responsive: false
+            }
         });
     });
+
+    // Collapsible Sections (Mobile Only)
+    document.querySelectorAll('.toggle-collapse').forEach(button => {
+        button.addEventListener('click', () => {
+            const target = document.querySelector(button.dataset.target);
+            target.classList.toggle('max-h-0');
+            target.classList.toggle('opacity-0');
+        });
+    });
+
+    // GSAP Animations
+    gsap.from('.glass', { opacity: 0, y: 20, duration: 0.8, stagger: 0.2, ease: 'power2.out' });
 </script>
+
 <style>
-    .glass { opacity: 0; transform: translateY(50px); } /* Initial state for animation */
+    /* Glass Effect (Override base for dashboard) */
+    .glass {
+        background: rgba(31, 41, 55, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.125);
+    }
+    body:not(.dark) .glass {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+    }
+
+    /* Tier Colors */
+    .bronze-tier { color: #cd7f32; }
+    .silver-tier { color: #c0c0c0; }
+    .gold-tier { color: #ffd700; }
+
+    /* Collapsible Content */
+    .content-collapsible {
+        transition: all 0.3s ease;
+        max-height: 500px;
+        overflow: hidden;
+    }
+    .content-collapsible.max-h-0 {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 768px) {
+        #dashboard-grid > * {
+            min-width: 85%;
+        }
+        .content-collapsible:not(.max-h-0) {
+            max-height: 300px;
+        }
+    }
 </style>
 {% endblock %}

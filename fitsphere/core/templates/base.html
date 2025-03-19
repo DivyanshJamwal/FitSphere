@@ -1,38 +1,534 @@
 <!DOCTYPE html>
-<html lang="en" class="dark" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FitSphere{% endblock %}</title>
+    <!-- Google Fonts: Inter and Playfair Display -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- charts-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <svg class="hidden" xmlns="http://www.w3.org/2000/svg">
+        <!-- Chatbot Icons -->
+        <symbol id="icon-close" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </symbol>
+        <symbol id="icon-send" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M3 20V4l19 8l-19 8Zm2-3l11.85-5L5 7v5.5l5 1.5l-5 1.5V17Z"/>
+        </symbol>
+        <symbol id="icon-bot" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M21 11.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 11.5v-7A2.5 2.5 0 0 1 5.5 2h13A2.5 2.5 0 0 1 21 4.5v7Z"/>
+        </symbol>
+    </svg>
+    <!--logout icon-->
+    <svg class="hidden" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="icon-logout" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </symbol>
+    </svg>
     <script>
-        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.setAttribute('data-theme', 'light');
+        function confirmLogout(event) {
+            if (!confirm('Are you sure you want to log out?')) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
         }
+    </script>
+    <script>
+        // Enhanced Theme Toggle with Smooth Animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const sun = themeToggle.querySelector('.sun');
+            const moon = themeToggle.querySelector('.moon');
+            
+            // Get initial theme
+            const savedTheme = localStorage.getItem('theme');
+            const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = savedTheme || (preferDark ? 'dark' : 'light');
+            
+            // Apply initial theme
+            document.documentElement.className = initialTheme;
+            localStorage.setItem('theme', initialTheme);
+            moon.style.display = initialTheme === 'dark' ? 'block' : 'none';
+            sun.style.display = initialTheme === 'light' ? 'block' : 'none';
+        });
+
         function toggleTheme() {
             const html = document.documentElement;
+            const themeToggle = document.getElementById('theme-toggle');
+            const sun = themeToggle.querySelector('.sun');
+            const moon = themeToggle.querySelector('.moon');
+            
             if (html.classList.contains('dark')) {
+                // Switch to light
                 html.classList.remove('dark');
-                html.setAttribute('data-theme', 'light');
-                localStorage.theme = 'light';
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+                gsap.to(moon, {opacity: 0, duration: 0.2, onComplete: () => {
+                    moon.style.display = 'none';
+                    sun.style.display = 'block';
+                    gsap.fromTo(sun, {opacity: 0}, {opacity: 1, duration: 0.3});
+                }});
             } else {
+                // Switch to dark
+                html.classList.remove('light');
                 html.classList.add('dark');
-                html.setAttribute('data-theme', 'dark');
-                localStorage.theme = 'dark';
+                localStorage.setItem('theme', 'dark');
+                gsap.to(sun, {opacity: 0, duration: 0.2, onComplete: () => {
+                    sun.style.display = 'none';
+                    moon.style.display = 'block';
+                    gsap.fromTo(moon, {opacity: 0}, {opacity: 1, duration: 0.3});
+                }});
             }
         }
+
+        // Chatbot toggle and auto-close
         function toggleChatbot() {
             const chat = document.getElementById('chatbot');
-            chat.classList.toggle('hidden');
+            const toggle = document.querySelector('.chatbot-toggle');
+            if (chat.classList.contains('hidden')) {
+                // Opening the chat
+                chat.classList.remove('hidden');
+                toggle.classList.add('hidden');
+            } else {
+                // Closing the chat
+                chat.classList.add('hidden');
+                toggle.classList.remove('hidden');
+                fetch("{% url 'chatbot_clear' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                }).then(() => {
+                    document.getElementById('chat-body').innerHTML = '<p class="text-sm text-gray-400">Ask me anything, my liege!</p>';
+                });
+            }
         }
+        document.addEventListener('click', function(event) {
+            const chat = document.getElementById('chatbot');
+            const toggle = document.querySelector('.chatbot-toggle');
+            if (!chat.contains(event.target) && !toggle.contains(event.target) && !chat.classList.contains('hidden')) {
+                toggleChatbot(); // Delegate to the unified toggle function
+            }
+        })
+    </script>
+    <style>
+        /* CSS Variables */
+        :root {
+            --glass-bg-dark: rgba(255, 255, 255, 0.05);
+            --glass-bg-light: rgba(0, 0, 0, 0.05);
+            --glow: 0 0 10px rgba(59, 130, 246, 0.5);
+            --border-dark: #ffffff10;
+            --border-light: #00000010;
+        }
+        /* Base Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+            line-height: 1.5;
+            height: 100vh; /* Fixed screen height */
+            width: 100vw; /* Fixed screen width */
+            overflow: hidden; /* No scroll */
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+        /* Glassmorphism */
+        .glass {
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--border-dark);
+        }
+        body:not(.dark) .glass {
+            background: var(--glass-bg-light);
+            border: 1px solid var(--border-light);
+        }
+        body.dark .glass {
+            background: var(--glass-bg-dark);
+        }
+        /* Navigation Links */
+        .nav-link {
+            position: relative;
+            font-weight: 400;
+        }
+
+        /* Add to existing button styles */
+        html.dark {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        html.light {
+            --bg-color: #f0f0f0;
+            --text-color: #1a1a1a;
+            --glass-bg: rgba(0, 0, 0, 0.05);
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Add these styles to your existing CSS */
+#theme-toggle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    perspective: 500px;
+    transition: transform 0.3s ease-in-out;
+    transform-origin: center; /* Creates 3D space */
+}
+
+#theme-toggle svg {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    transform: translate(-50%, -50%);
+    transition: 
+        opacity 0.4s ease,
+        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Initial state for moon icon */
+.moon {
+    transform: translate(-50%, -50%) rotateY(180deg);
+    opacity: 0;
+}
+
+        /* Active states */
+        .dark .sun {
+            transform: translate(-50%, -50%) rotateY(180deg);
+            opacity: 0;
+        }
+
+        .dark .moon {
+            transform: translate(-50%, -50%) rotateY(0deg);
+            opacity: 1;
+        }
+
+        .light .sun {
+            transform: translate(-50%, -50%) rotateY(0deg);
+            opacity: 1;
+        }
+
+        .light .moon {
+            transform: translate(-50%, -50%) rotateY(-180deg);
+            opacity: 0;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.4s, color 0.4s;
+        }
+
+        
+
+        #theme-toggle:hover {
+            transform: scale(1.1) rotate(40deg);
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: width 0.4s;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .nav-link:hover {
+            text-shadow: var(--glow);
+            color: #60a5fa;
+        }
+        /* 3D Buttons */
+        .btn-3d {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s;
+        }
+        .btn-3d:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+            text-shadow: var(--glow);
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
+        }
+        /* Chatbot Pulse Animation */
+        .chatbot-toggle {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        /* Neon Line under Logo */
+        .neon-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+        /* Chatbot Refinement */
+        @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+    }
+    
+    @keyframes message-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .animate-message-in {
+        animation: message-in 0.3s ease-out forwards;
+    }
+
+    /* Custom Scrollbar */
+    #chat-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #chat-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+
+    #chat-body::-webkit-scrollbar-thumb {
+        background: rgba(165, 180, 252, 0.3);
+        border-radius: 4px;
+    }
+
+    /* Light Mode Adjustments */
+    body:not(.dark) #chat-body::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    body:not(.dark) #chat-body::-webkit-scrollbar-thumb {
+        background: rgba(79, 70, 229, 0.3);
+    }
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body { font-size: 14px; }
+            .nav-links { display: none; }
+            .chatbot-toggle { padding: 3px; }
+            #chatbot { width: 90vw; height: 50vh; }
+        }
+        .sparkle {
+            background: radial-gradient(circle, rgba(248, 224, 4, 0.959) 10%, transparent 10%) 0 0 / 20px 20px;
+            animation: sparkle 2s infinite linear;
+            pointer-events: none;
+        }
+        @keyframes sparkle {
+            0% { transform: translate(0, 0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(10px, 10px); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="dark">
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 w-full glass z-10 p-4 flex justify-between items-center">
+        <a href="{% url 'landing' %}" class="relative">
+            <!-- FitSphere SVG Logo -->
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="14" stroke="#3b82f6" stroke-width="4"/>
+                <path d="M16 8V24M8 16H24" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+                <span class="neon-line" style="bottom: -4px;"></span>
+            </svg>
+        </a>
+        <div class="nav-links flex items-center space-x-4">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+                <a href="{% url 'workout_planner' %}" class="nav-link">Planner</a>
+                <a href="{% url 'diet_planner' %}" class="nav-link">Diet</a>
+                <a href="{% url 'fitness_tracker' %}" class="nav-link">Tracker</a>
+                <a href="#" class="btn-3d py-1 px-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded animate__animated animate__pulse animate__infinite relative overflow-hidden">
+                    Premium
+                    <span class="absolute inset-0 sparkle"></span>
+                </a>
+                <a href="{% url 'logout' %}" 
+                class="relative flex items-center justify-center p-2 rounded-full hover:bg-red-500/10 transition-all duration-300 group"
+                aria-label="Logout"
+                onclick="return confirmLogout(event)">
+                    <svg class="w-6 h-6 text-red-400 hover:text-red-500 transform transition-all duration-300 group-hover:scale-110">
+                        <use href="#icon-logout"></use>
+                    </svg>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Login</a>
+                <a href="{% url 'register' %}" class="nav-link">Register</a>
+            {% endif %}
+            <button id="theme-toggle" onclick="toggleTheme()" class="relative h-10 w-10">
+                <svg class="sun" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <svg class="moon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden pt-20 pb-8">
+        <div class="container mx-auto px-4 max-w-7xl h-full overflow-hidden">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass p-4 text-center text-sm text-gray-400 flex flex-col items-center gap-2">
+        <div>
+            © 2025 FitSphere. All rights reserved. | <a href="#" class="hover:text-blue-400">Terms</a> | <a href="#" class="hover:text-blue-400">Privacy</a>
+        </div>
+    </footer>
+
+    <!-- Chatbot (Authenticated Users Only) -->
+    {% if user.is_authenticated %}
+<div class="fixed bottom-4 right-4 z-50">
+    <button onclick="toggleChatbot()" class="chatbot-toggle bg-gradient-to-r from-blue-500 to-purple-500 text-white p-3 rounded-full shadow-2xl hover:shadow-glow hover:scale-105 transition-all duration-300 relative group">
+        <svg class="w-8 h-8 transform transition-transform group-hover:rotate-12">
+            <use href="#icon-bot"></use>
+        </svg>
+        <span class="absolute -top-1 -right-1 flex h-4 w-4">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-4 w-4 bg-purple-500"></span>
+        </span>
+    </button>
+    
+    <div id="chatbot" class="hidden glass p-0 rounded-xl shadow-2xl flex flex-col border border-gray-700 backdrop-blur-lg w-96 max-h-[80vh]">
+        <!-- Header -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-700 bg-gray-900/50 rounded-t-xl">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <svg class="w-8 h-8 text-purple-400 animate-float">
+                        <use href="#icon-bot"></use>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">FitSphere Assistant</h3>
+                    <p class="text-xs text-purple-300">AI-powered fitness expert</p>
+                </div>
+            </div>
+            <button onclick="toggleChatbot()" class="text-gray-400 hover:text-white p-1 rounded-full hover:bg-gray-700 transition-colors">
+                <svg class="w-6 h-6">
+                    <use href="#icon-close"></use>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chat Body -->
+        <div id="chat-body" class="flex-1 overflow-y-auto p-4 space-y-4">
+            {% for chat in request.session.chat_history %}
+                <div class="flex flex-col space-y-1">
+                    <div class="flex justify-end">
+                        <div class="bg-blue-600/30 rounded-xl p-3 max-w-[80%] animate-message-in">
+                            <p class="text-sm text-white">{{ chat.user }}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-start">
+                        <div class="bg-gray-800/50 rounded-xl p-3 max-w-[80%] animate-message-in">
+                            <p class="text-sm text-gray-100">{{ chat.bot }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="h-full flex flex-col items-center justify-center text-center p-4">
+                    <svg class="w-16 h-16 text-purple-500 mb-4 opacity-50">
+                        <use href="#icon-bot"></use>
+                    </svg>
+                    <p class="text-sm text-gray-400">How can I help you today?</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Input Area -->
+        <form onsubmit="sendMessage(event)" class="p-4 border-t border-gray-700 bg-gray-900/50">
+            <div class="flex items-center space-x-2">
+                <input id="chat-input" 
+                       type="text" 
+                       name="message" 
+                       placeholder="Message FitSphere..." 
+                       required 
+                       class="flex-1 p-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-white placeholder-gray-500 transition-all">
+                <button type="submit" 
+                        class="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors flex items-center justify-center">
+                    <svg class="w-5 h-5">
+                        <use href="#icon-send"></use>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+    <!-- Chatbot Message Sending Script -->
+    <script>
         function sendMessage(event) {
             event.preventDefault();
             const input = document.getElementById('chat-input');
             const message = input.value.trim();
             if (!message) return;
+    
             const chatBody = document.getElementById('chat-body');
-            chatBody.innerHTML += `<p class="text-sm"><strong>You:</strong> ${message}</p>`;
+            
+            // Add user message
+            const userMessage = document.createElement('div');
+            userMessage.innerHTML = `
+                <div class="flex justify-end">
+                    <div class="bg-blue-600/30 rounded-xl p-3 max-w-[80%] animate-message-in">
+                        <p class="text-sm text-white">${message}</p>
+                    </div>
+                </div>
+            `;
+            chatBody.appendChild(userMessage);
+    
+            // Add loading state
+            const loadingMessage = document.createElement('div');
+            loadingMessage.innerHTML = `
+                <div class="flex justify-start">
+                    <div class="bg-gray-800/50 rounded-xl p-3 max-w-[80%] animate-pulse">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatBody.appendChild(loadingMessage);
+            chatBody.scrollTop = chatBody.scrollHeight;
+    
             fetch("{% url 'chatbot_message' %}", {
                 method: 'POST',
                 headers: {
@@ -41,134 +537,46 @@
                 },
                 body: `message=${encodeURIComponent(message)}`
             })
-            .then(response => response.json())
-            .then(data => {
-                chatBody.innerHTML += `<p class="text-sm"><strong>Bot:</strong> ${data.bot}</p>`;
-                chatBody.scrollTop = chatBody.scrollHeight;
-            })
-            .catch(error => {
-                chatBody.innerHTML += `<p class="text-sm text-red-500">Error: ${error}</p>`;
-            });
-            input.value = '';
-        }
-    </script>
-    <style>
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glow: 0 0 10px rgba(255, 255, 255, 0.2);
-        }
-        [data-theme="dark"] { background: #1a1a1a; color: #e0e0e0; }
-        [data-theme="light"] { background: #f0f0f0; color: #333; }
-        .glass { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #4b5e91; }
-        input:checked + .slider:before { transform: translateX(20px); }
-    </style>
-</head>
-<body class="min-h-screen font-sans">
-    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-    <nav class="fixed top-0 w-full glass z-10 p-4 flex justify-between items-center">
-        <a href="{% url 'landing' %}" class="text-lg font-bold">FitSphere</a>
-        <div class="flex items-center">
-            {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="mx-2">Dashboard</a>
-                <a href="{% url 'workout_planner' %}" class="mx-2">Planner</a>
-                <a href="{% url 'diet_planner' %}" class="mx-2">Diet</a>
-                <a href="{% url 'fitness_tracker' %}" class="mx-2">Tracker</a>
-                <a href="#" class="mx-2 text-yellow-400">Merch</a>
-                <a href="{% url 'logout' %}" class="mx-2">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="mx-2">Login</a>
-                <a href="{% url 'register' %}" class="mx-2">Register</a>
-            {% endif %}
-            <label class="switch mx-2">
-                <input type="checkbox" onchange="toggleTheme()" {% if not request.session.theme or request.session.theme == 'dark' %}checked{% endif %}>
-                <span class="slider"></span>
-            </label>
-        </div>
-    </nav>
-    <main class="pt-20">
-        {% block content %}{% endblock %}
-    </main>
-    {% if user.is_authenticated %}
-    <div class="fixed bottom-4 right-4 z-20">
-        <button onclick="toggleChatbot()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-full shadow-lg hover:shadow-glow transition-all">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h4m9-7a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </button>
-        <div id="chatbot" class="hidden glass p-4 rounded-xl shadow-lg w-96 h-[28rem] flex flex-col mt-2 border border-gray-700">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-xl font-bold text-blue-400">FitSphere Bot</h3>
-                <button onclick="toggleChatbot()" class="text-gray-400 hover:text-white">&times;</button>
-            </div>
-            <div id="chat-body" class="flex-1 overflow-y-auto mb-4 p-2 bg-gray-900/50 rounded-lg">
-                {% for chat in request.session.chat_history %}
-                    <p class="text-sm mb-1"><strong class="text-blue-300">You:</strong> {{ chat.user }}</p>
-                    <p class="text-sm mb-2"><strong class="text-purple-300">Bot:</strong> {{ chat.bot }}</p>
-                {% empty %}
-                    <p class="text-sm text-gray-400">Ask me anything, my liege!</p>
-                {% endfor %}
-            </div>
-            <form onsubmit="sendMessage(event)" class="flex">
-                <input id="chat-input" type="text" name="message" placeholder="Command me..." required class="flex-1 p-2 bg-transparent border border-gray-600 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white">
-                <button type="submit" class="p-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-r-lg">Send</button>
-            </form>
-        </div>
-    </div>
-    <style>
-        .shadow-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
-    </style>
-    <script>
-        function getCsrfToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]').value;
-        }
-        function toggleChatbot() {
-            const chat = document.getElementById('chatbot');
-            if (chat.classList.contains('hidden')) {
-                chat.classList.remove('hidden');
-            } else {
-                chat.classList.add('hidden');
-                // Clear chat history on close
-                fetch("{% url 'chatbot_clear' %}", {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCsrfToken() }
-                }).then(() => {
-                    document.getElementById('chat-body').innerHTML = '<p class="text-sm">Ask me anything!</p>';
-                });
-            }
-        }
-        function sendMessage(event) {
-            event.preventDefault();
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (!message) return;
-            const chatBody = document.getElementById('chat-body');
-            chatBody.innerHTML += `<p class="text-sm"><strong>You:</strong> ${message}</p>`;
-            fetch("{% url 'chatbot_message' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: `message=${encodeURIComponent(message)}`
-            })
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                chatBody.innerHTML += `<p class="text-sm"><strong>Bot:</strong> ${data.bot}</p>`;
-                chatBody.scrollTop = chatBody.scrollHeight;
+                loadingMessage.remove();
+                const botMessage = document.createElement('div');
+                botMessage.innerHTML = `
+                    <div class="flex justify-start">
+                        <div class="bg-gray-800/50 rounded-xl p-3 max-w-[80%] animate-message-in">
+                            <p class="text-sm text-gray-100">${data.bot}</p>
+                        </div>
+                    </div>
+                `;
+                chatBody.appendChild(botMessage);
+                chatBody.scrollTo({
+                    top: chatBody.scrollHeight,
+                    behavior: 'smooth'
+                });
             })
             .catch(error => {
-                chatBody.innerHTML += `<p class="text-sm text-red-500">Error: ${error.message}</p>`;
-                chatBody.scrollTop = chatBody.scrollHeight;
+                loadingMessage.remove();
+                const errorMessage = document.createElement('div');
+                errorMessage.innerHTML = `
+                    <div class="flex justify-start">
+                        <div class="bg-red-500/20 rounded-xl p-3 max-w-[80%] animate-message-in">
+                            <p class="text-sm text-red-400">Error: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+                chatBody.appendChild(errorMessage);
+                chatBody.scrollTo({
+                    top: chatBody.scrollHeight,
+                    behavior: 'smooth'
+                });
             });
+    
             input.value = '';
+            input.focus();
         }
     </script>
-{% endif %}
 </body>
 </html>

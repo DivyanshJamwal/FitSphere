@@ -21,21 +21,15 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     first_name = models.CharField(max_length=50)
-    username = models.CharField(
-        max_length=20,
-        unique=True,
-        validators=[
-            MinLengthValidator(5),
-            MaxLengthValidator(20),
-            RegexValidator(r'^[a-zA-Z0-9]+$', "Only alphanumeric characters allowed")
-        ]
-    )
+    username = models.CharField(max_length=20, unique=True, validators=[MinLengthValidator(5), MaxLengthValidator(20), RegexValidator(r'^[a-zA-Z0-9]+$', "Only alphanumeric characters allowed")])
     email = models.EmailField(unique=True)
     weight = models.FloatField(null=True, blank=True, help_text="Weight in kg")
     goal = models.CharField(max_length=50, choices=[('lose weight', 'Lose Weight'), ('maintain', 'Maintain'), ('gain', 'Gain')], default='maintain')
+    step_goal = models.PositiveIntegerField(default=10000, help_text="Daily step goal")
+    workout_goal = models.PositiveIntegerField(default=3, help_text="Weekly workout goal")
+    calorie_goal = models.PositiveIntegerField(default=2000, help_text="Daily calorie goal")
 
     objects = UserManager()
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -134,10 +128,17 @@ class Streak(models.Model):
         return f"{self.user.username} - {self.type} Streak"
 
 class Achievement(models.Model):
+    TIERS = [
+        ('bronze', 'Bronze'),
+        ('silver', 'Silver'),
+        ('gold', 'Gold'),
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = models.TextField()
     date_earned = models.DateField(auto_now_add=True)
+    tier = models.CharField(max_length=10, choices=TIERS, default='bronze')
+    icon = models.TextField(default='<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>')
 
     def __str__(self):
         return f"{self.user.username} - {self.name}"

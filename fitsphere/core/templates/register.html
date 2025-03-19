@@ -1,14 +1,86 @@
 {% extends 'base.html' %}
 {% block title %}Register - FitSphere{% endblock %}
 {% block content %}
-<div class="flex items-center justify-center min-h-screen">
-    <div class="glass p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h1 class="text-2xl font-bold mb-4">Register</h1>
-        <form method="post" class="space-y-4">
+<div class="flex items-center justify-center h-screen">
+    <div class="glass p-8 rounded-xl shadow-lg w-full max-w-md relative border border-gray-700">
+        <h1 class="text-3xl font-bold mb-6 text-center" id="register-title">Register</h1>
+        <form method="post" class="space-y-6" id="register-form" data-errors="{% if form.errors %}true{% else %}false{% endif %}">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Register</button>
+            <div class="space-y-4">
+                {% for field in form %}
+                    <div class="relative">
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">{{ field.label }}</label>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}"
+                               class="glass w-full p-2 rounded-md border border-gray-600 bg-transparent text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all duration-300 placeholder-gray-500"
+                               placeholder="{{ field.label }}">
+                        {% if field.errors %}
+                            {% for error in field.errors %}
+                                <p class="text-sm text-red-400 mt-1 error-message">{{ error }}</p>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded btn-3d hover:from-blue-700 hover:to-blue-500 transition-all duration-300">Register</button>
+            <a href="{% url 'login' %}" class="block text-center text-gray-400 hover:text-blue-400 transition-colors duration-300 relative group">
+                Already have an account? Login
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-[1px] bg-blue-400 transition-all duration-300 group-hover:w-[calc(100%-2rem)]"></span>
+            </a>
         </form>
     </div>
 </div>
+
+<style>
+    .error-message {
+        animation: fadeInOut 3s ease-in-out forwards;
+    }
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.getElementById('register-title');
+        const text = title.textContent;
+        title.textContent = '';
+        text.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            span.style.opacity = 0;
+            span.style.display = 'inline-block';
+            title.appendChild(span);
+            gsap.to(span, { opacity: 1, duration: 0.5, delay: i * 0.1, ease: 'power2.out' });
+        });
+    
+        const form = document.getElementById('register-form');
+        const hasErrors = form.getAttribute('data-errors') === "true";
+    
+        if (hasErrors) {
+            gsap.to(form, { 
+                x: -10, 
+                duration: 0.1, 
+                repeat: 5, 
+                yoyo: true, 
+                ease: 'power2.inOut', 
+                onComplete: () => {
+                    gsap.set(form, { x: 0 });
+                    form.querySelectorAll('input').forEach(input => input.value = '');
+                }
+            });
+        }
+    
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                const error = input.nextElementSibling;
+                if (error && error.classList.contains('error-message')) {
+                    gsap.to(error, { opacity: 0, duration: 0.3, onComplete: () => error.style.display = 'none' });
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

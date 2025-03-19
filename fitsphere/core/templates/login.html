@@ -1,15 +1,80 @@
 {% extends 'base.html' %}
 {% block title %}Login - FitSphere{% endblock %}
 {% block content %}
-<div class="flex items-center justify-center min-h-screen">
-    <div class="glass p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h1 class="text-2xl font-bold mb-4">Login</h1>
-        <form method="post" class="space-y-4">
+<div class="flex items-center justify-center h-full">
+    <div class="glass p-6 rounded-lg shadow-lg w-full max-w-md relative border border-gray-700 dark:border-gray-700">
+        <h1 class="text-2xl font-bold mb-6 text-center" id="login-title">Login</h1>
+        <form method="post" class="space-y-6" id="login-form" data-errors="{% if form.errors %}true{% else %}false{% endif %}">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Login</button>
-            <a href="{% url 'forgot_password' %}" class="block text-center text-blue-400 hover:underline">Forgot Password?</a>
+            {% for field in form %}
+                <div class="relative">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium mb-1 dark:text-gray-300 text-gray-700">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}"
+                           class="glass w-full p-2 rounded border dark:border-gray-600 border-gray-300 bg-transparent dark:text-white text-gray-900 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-400 transition-all duration-300"
+                           value="">
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="error-message text-red-500 dark:text-red-400 text-sm mt-1">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-600 dark:to-blue-400 text-white rounded btn-3d hover:from-blue-700 hover:to-blue-500 transition-all duration-300">Login</button>
+            <a href="{% url 'forgot_password' %}" class="block text-center text-blue-400 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-500 relative group">
+                Forgot Password?
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-[1px] bg-blue-400 dark:bg-blue-400 transition-all duration-300 group-hover:w-[calc(100%-2rem)]"></span>
+            </a>
+            <a href="{% url 'register' %}" class="block text-center text-blue-400 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-500 relative group">
+                Don’t have an account? Register
+                <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-[1px] bg-blue-400 dark:bg-blue-400 transition-all duration-300 group-hover:w-[calc(100%-2rem)]"></span>
+            </a>
         </form>
     </div>
 </div>
+<style>
+    .error-message {
+        animation: fadeInOut 3s ease-in-out forwards;
+    }
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Animated heading (letter-by-letter fade-in)
+        const title = document.getElementById('login-title');
+        const text = title.textContent;
+        title.textContent = '';
+        text.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.textContent = char;
+            span.style.opacity = 0;
+            span.style.display = 'inline-block';
+            title.appendChild(span);
+            gsap.to(span, { opacity: 1, duration: 0.5, delay: i * 0.1, ease: 'power2.out' });
+        });
+
+
+    const form = document.getElementById('login-form');
+    const hasErrors = form.getAttribute('data-errors') === "true";
+
+    if (hasErrors) {
+        gsap.to(form, { 
+            x: -10, 
+            duration: 0.1, 
+            repeat: 5, 
+            yoyo: true, 
+            ease: 'power2.inOut', 
+            onComplete: () => {
+                gsap.set(form, { x: 0 });
+                form.querySelectorAll('input').forEach(input => input.value = '');
+            }
+        });
+    }
+
+    });
+</script>
 {% endblock %}
