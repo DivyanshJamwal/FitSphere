@@ -98,6 +98,63 @@
                 </div>
             </div>
         </div>
+
+        <!-- Exercises Carousel -->
+        <div class="glass-card p-8 rounded-3xl col-span-2 transform transition-all hover:scale-[1.02]">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">🔥 Exercise Demos</h2>
+            </div>
+
+            <!-- Swiper Container -->
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    <!-- Slide 1 -->
+                    <div class="swiper-slide">
+                        <img src="https://darebee.com/images/exercise/2025/april6.gif" alt="Exercise 1" class="rounded-lg w-full h-64 object-cover">
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="swiper-slide">
+                        <img src="https://media1.tenor.com/m/h9W4zejLjTMAAAAd/fit-workout.gif" alt="Exercise 2" class="rounded-lg w-full h-64 object-cover">
+                    </div>
+                    <!-- Slide 3 -->
+                    <div class="swiper-slide">
+                        <img src="https://i.pinimg.com/originals/c6/e1/6a/c6e16a9b9dc7d97b0d4ad78b50e7b424.gif" alt="Exercise 3"  class="rounded-lg w-full h-64 object-cover">
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+
+                <!-- Pagination -->
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+        <!-- Include Swiper.js -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+        <script>
+            var swiper = new Swiper(".mySwiper", {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                loop: true,
+                autoplay: {
+                    delay: 2000, // 2 seconds
+                    disableOnInteraction: false,
+                },
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                pagination: {
+                    el: ".swiper-pagination",
+                    clickable: true,
+                },
+            });
+
+        </script>
+
     </div>
     
 

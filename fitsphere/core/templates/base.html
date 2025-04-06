@@ -355,15 +355,24 @@
     <nav class="fixed top-0 left-0 w-full glass z-10 p-4 flex justify-between items-center">
         <a href="{% url 'landing' %}" class="relative">
             <!-- FitSphere SVG Logo -->
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="14" stroke="#3b82f6" stroke-width="4"/>
-                <path d="M16 8V24M8 16H24" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
-                <span class="neon-line" style="bottom: -4px;"></span>
+            <svg width="60" height="65" viewBox="0 0 60 65" xmlns="http://www.w3.org/2000/svg" fill="none">
+                <!-- Outer Circle with Modern Stroke -->
+                <circle cx="30" cy="30" r="25" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="4 2"/>
+                
+                <!-- Dynamic Swirl with Sleeker Look -->
+                <path d="M15,35 Q30,8 45,35" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>
+                
+                <!-- Inner Motion Lines for Energy -->
+                <path d="M20,40 Q30,20 40,40" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+                
+                <!-- Bold, Larger, More Readable Text Moved Down -->
+                <text x="5" y="63" font-family="Arial, sans-serif" font-size="11" fill="currentColor" font-weight="bold">FitSphere</text>
             </svg>
         </a>
         <div class="nav-links flex items-center space-x-4">
             {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+                <a href="{% url 'bmi_tracker' %}" class="nav-link">BMI Tracker</a>
                 <a href="{% url 'workout_planner' %}" class="nav-link">Planner</a>
                 <a href="{% url 'diet_planner' %}" class="nav-link">Diet</a>
                 <a href="{% url 'fitness_tracker' %}" class="nav-link">Tracker</a>
@@ -404,9 +413,11 @@
     </main>
 
     <!-- Footer -->
-    <footer class="glass p-4 text-center text-sm text-gray-400 flex flex-col items-center gap-2">
+    <footer class="glass p-4 text-center text-sm text-inherit flex flex-col items-center gap-2">
         <div>
-            © 2025 FitSphere. All rights reserved. | <a href="#" class="hover:text-blue-400">Terms</a> | <a href="#" class="hover:text-blue-400">Privacy</a>
+            © 2025 FitSphere. All rights reserved. | 
+            <a href="{% url 'terms' %}" class="hover:text-blue-400">Terms</a> | 
+            <a href="{% url 'privacy' %}" class="hover:text-blue-400">Privacy</a>
         </div>
     </footer>
 

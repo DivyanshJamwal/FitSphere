@@ -261,15 +261,17 @@ def chatbot_clear(request):
 @require_POST
 def chatbot_message(request):
     message = request.POST.get('message').lower()
-    api_key = ""  # Replace with your real key NOW
+    api_key = "AIzaSyDO9L2bim_KyCkA8QNKr8ToBtEKtvVp2ZI"  # Replace with your real key NOW
     
     # Fitness/diet tips logic
-    if 'workout' in message or 'exercise' in message:
-        response = "Try a 20-min HIIT session: 10 burpees, 15 squats, 20 jumping jacks—repeat 3x for a killer burn!"
-    elif 'diet' in message or 'food' in message:
+    # if 'workout' in message or 'exercise' in message:
+    #     response = "Try a 20-min HIIT session: 10 burpees, 15 squats, 20 jumping jacks—repeat 3x for a killer burn!"
+    # elif 'diet' in message or 'food' in message:
+    #     response = "Fuel up with 100g chicken breast (31g protein, 165 cal) and 200g broccoli (7g carbs, 70 cal)—lean and mean!"
+    # elif 'motivation' in message or 'inspire' in message:
+    #     response = "You’re a titan carving your legacy—every rep, every bite bends the world to your will. Keep ruling!"
+    if 'diet' in message or 'food' in message:
         response = "Fuel up with 100g chicken breast (31g protein, 165 cal) and 200g broccoli (7g carbs, 70 cal)—lean and mean!"
-    elif 'motivation' in message or 'inspire' in message:
-        response = "You’re a titan carving your legacy—every rep, every bite bends the world to your will. Keep ruling!"
     else:
         # Real Gemini API call
         try:
@@ -288,4 +290,11 @@ def chatbot_message(request):
     chat_history.append({"user": message, "bot": response})
     request.session['chat_history'] = chat_history[-5:]
     return JsonResponse({'user': message, 'bot': response})
+
+
+def terms_view(request):
+        return render(request, "terms.html")
+
+def privacy_view(request):
+    return render(request, "privacy.html")
 

@@ -16,4 +16,6 @@ urlpatterns = [
     path('chatbot/message/', views.chatbot_message, name='chatbot_message'),
     path('chatbot/clear/', views.chatbot_clear, name='chatbot_clear'),
     path('logout/', views.logout_view, name='logout'),
+    path("terms/", views.terms_view, name="terms"),
+    path("privacy/", views.privacy_view, name="privacy"),
 ]
